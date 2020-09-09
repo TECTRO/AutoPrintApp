@@ -30,6 +30,7 @@
         {
             this.label1 = new System.Windows.Forms.Label();
             this.printDialog1 = new System.Windows.Forms.PrintDialog();
+            this.listBox1 = new System.Windows.Forms.ListBox();
             this.SuspendLayout();
             // 
             // label1
@@ -39,18 +40,27 @@
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(367, 36);
             this.label1.TabIndex = 0;
-            this.label1.Text = "Печать срабатывает на Ctrl + Shift + S";
+            this.label1.Text = "Печать срабатывает на Ctrl + Shift + Alt";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // printDialog1
             // 
             this.printDialog1.UseEXDialog = true;
             // 
+            // listBox1
+            // 
+            this.listBox1.FormattingEnabled = true;
+            this.listBox1.Location = new System.Drawing.Point(16, 61);
+            this.listBox1.Name = "listBox1";
+            this.listBox1.Size = new System.Drawing.Size(363, 342);
+            this.listBox1.TabIndex = 1;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(391, 54);
+            this.ClientSize = new System.Drawing.Size(391, 413);
+            this.Controls.Add(this.listBox1);
             this.Controls.Add(this.label1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
             this.KeyPreview = true;
@@ -66,6 +76,7 @@
 
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.PrintDialog printDialog1;
+        private System.Windows.Forms.ListBox listBox1;
     }
 }
 

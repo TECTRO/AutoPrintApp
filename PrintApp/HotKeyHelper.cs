@@ -1,9 +1,14 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Forms;
+using System.Windows.Input;
 
 namespace PrintApp
 {
@@ -17,210 +22,143 @@ namespace PrintApp
             None
         }
 
-        private globalKeyboardHook _hook = new globalKeyboardHook();
-        private List<Keys> HookedKeys = new List<Keys>();
-        private Queue<Keys> LastKeys = new Queue<Keys>();
+        private readonly List<Key> HookedKeys = new List<Key>();
+        private readonly Queue<Key> LastKeys = new Queue<Key>();
 
-        public void KeyUpRegister() => _hook.KeyUp += _hook_KeyUp;
-        public void KeyUpUnRegister() => _hook.KeyUp -= _hook_KeyUp;
 
         public delegate void FuncDelegate();
 
         public FuncDelegate ExternFunc;
 
-        private void _hook_KeyUp(object sender, KeyEventArgs e)
+        public delegate void AllFuncDelegate(Key r);
+
+        public AllFuncDelegate AllFunc;
+
+        public void StartMonitor()
         {
-            LastKeys.Enqueue(e.KeyCode);
-            lock (_syncPlug)
+            DataSource dataSource = new DataSource();
+
+            while (true)
             {
-                if (_hook.HookedKeys.All(f => LastKeys.Contains(f)))
+                // Get pressed keys and saves them
+                List<Key> pressedKeys = dataSource.GetNewPressedKeys();
+                if (pressedKeys.Any())
                 {
-                    LastKeys.Clear();
-                    ExternFunc?.Invoke();
+                    lock (_syncPlug)
+                    {
+                        foreach (var pressedKey in pressedKeys)
+                            LastKeys.Enqueue(pressedKey);
+                        
+
+                        while (LastKeys.Count > HookedKeys.Count)
+                            LastKeys.Dequeue();
+
+                        if (HookedKeys.All(f => LastKeys.Contains(f)))
+                        {
+                            LastKeys.Clear();
+                            ExternFunc?.Invoke();
+                        }
+
+                        foreach (var pressedKey in pressedKeys)
+                            AllFunc?.Invoke(pressedKey);
+                    }
                 }
+                Thread.Sleep(1);
             }
-            
         }
 
-        public void Add(Keys key)
+        public HookHelper(Key[] keys, FuncDelegate externFunc, HowToRegister howTo)
         {
-            _hook.HookedKeys.Add(key);
-        }
-
-        public HookHelper()
-        {
-        }
-        public HookHelper(Keys[] keys, FuncDelegate externFunc, HowToRegister howTo)
-        {
-            _hook.HookedKeys.AddRange(keys);
+            HookedKeys.AddRange(keys);
             ExternFunc = externFunc;
-            switch (howTo)
-            {
-                case HowToRegister.KeyUp: _hook.KeyUp+= _hook_KeyUp; break;
-                case HowToRegister.KeyDown: _hook.KeyDown += _hook_KeyUp; break;
-            }
+            var th = new Thread(StartMonitor);
+            th.SetApartmentState(ApartmentState.STA);
+            th.Start();
         }
     }
 
-
-
-    class globalKeyboardHook //так называется мой класс
+    public class DataSource
     {
-        #region Constant, Structure and Delegate Definitions
-        /// <summary>
-        /// defines the callback type for the hook
-        /// </summary>
-        // public delegate int keyboardHookProc(int code, int wParam, ref keyboardHookStruct lParam);
+        [DllImport("User32.dll")]
+        private static extern short GetAsyncKeyState(int vKey);
 
-        public struct keyboardHookStruct
+        [DllImport("user32.dll")]
+        static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+
+        private HashSet<Key> PressedKeys = new HashSet<Key>();
+
+
+
+
+        /// <summary>
+        /// This functions scans currently pressed keys and returns them. Every key is returned just once. If the key is still pressed during second
+        /// method call, it is not returned. It's returned again after the key is released and pressed again.
+        /// </summary>
+        /// <returns>List of keys which were just pressed</returns>
+        public List<Key> GetNewPressedKeys()
         {
-            public int vkCode;
-            public int scanCode;
-            public int flags;
-            public int time;
-            public int dwExtraInfo;
-        }
+            List<Key> newPressedKeys = new List<Key>(10);
 
-        const int WH_KEYBOARD_LL = 13;
-        const int WM_KEYDOWN = 0x100;
-        const int WM_KEYUP = 0x101;
-        const int WM_SYSKEYDOWN = 0x104;
-        const int WM_SYSKEYUP = 0x105;
-        #endregion
-
-        #region Instance Variables
-        /// <summary>
-        /// The collections of keys to watch for
-        /// </summary>
-        public List<Keys> HookedKeys = new List<Keys>();
-        /// <summary>
-        /// Handle to the hook, need this to unhook and call the next hook
-        /// </summary>
-        IntPtr hhook = IntPtr.Zero;
-        #endregion
-
-        #region Events
-        /// <summary>
-        /// Occurs when one of the hooked keys is pressed
-        /// </summary>
-        public event KeyEventHandler KeyDown;
-        /// <summary>
-        /// Occurs when one of the hooked keys is released
-        /// </summary>
-        public event KeyEventHandler KeyUp;
-        #endregion
-
-        #region Constructors and Destructors
-        /// <summary>
-        /// Initializes a new instance of the <see cref="globalKeyboardHook"/> class and installs the keyboard hook.
-        /// </summary>
-        public globalKeyboardHook()
-        {
-            hook();
-        }
-
-        /// <summary>
-        /// Releases unmanaged resources and performs other cleanup operations before the
-        /// <see cref="globalKeyboardHook"/> is reclaimed by garbage collection and uninstalls the keyboard hook.
-        /// </summary>
-        ~globalKeyboardHook()
-        {
-            unhook();
-        }
-        #endregion
-
-        #region Public Methods
-        /// <summary>
-        /// Installs the global hook
-        /// </summary>
-        public void hook()
-        {
-
-            IntPtr hInstance = LoadLibrary("User32");
-            //hhook = SetWindowsHookEx(WH_KEYBOARD_LL, hookProc, hInstance, 0);
-            delegateHookProc = hookProc;
-            hhook = SetWindowsHookEx(WH_KEYBOARD_LL, delegateHookProc, hInstance, 0);
-        }
-        public delegate int keyboardHookProc(int code, int wParam, ref keyboardHookStruct lParam);
-        keyboardHookProc delegateHookProc;
-        /// <summary>
-        /// Uninstalls the global hook
-        /// </summary>
-        public void unhook()
-        {
-            UnhookWindowsHookEx(hhook);
-        }
-
-        /// <summary>
-        /// The callback for the keyboard hook
-        /// </summary>
-        /// <param name="code">The hook code, if it isn't >= 0, the function shouldn't do anyting</param>
-        /// <param name="wParam">The event type</param>
-        /// <param name="lParam">The keyhook event information</param>
-        /// <returns></returns>
-        public int hookProc(int code, int wParam, ref keyboardHookStruct lParam)
-        {
-            if (code >= 0)
+            // Get state of every key we know
+            foreach (Key key in Utils.GetEnumValues<Key>().Where(x => x != Key.None))
             {
-                Keys key = (Keys)lParam.vkCode;
-                if (HookedKeys.Contains(key))
+                // Is it pressed?
+                bool down = Keyboard.IsKeyDown(key);
+
+                // It's not pressed, but it was - we consider this key as released
+                if (!down && PressedKeys.Contains(key))
+                    PressedKeys.Remove(key);
+                else if (down && !PressedKeys.Contains(key)) // The key is pressed, but wasn't pressed before - it will be returned
                 {
-                    KeyEventArgs kea = new KeyEventArgs(key);
-                    if ((wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) && (KeyDown != null))
-                    {
-                        KeyDown(this, kea);
-                    }
-                    else
-                    if ((wParam == WM_KEYUP || wParam == WM_SYSKEYUP) && (KeyUp != null))
-                    {
-                        KeyUp(this, kea);
-                    }
-                    if (kea.Handled)
-                        return 1;
+                    PressedKeys.Add(key);
+                    newPressedKeys.Add(key);
                 }
             }
-            return CallNextHookEx(hhook, code, wParam, ref lParam);
+
+            return newPressedKeys;
         }
-        #endregion
-
-        #region DLL imports
-        /// <summary>
-        /// Sets the windows hook, do the desired event, one of hInstance or threadId must be non-null
-        /// </summary>
-        /// <param name="idHook">The id of the event you want to hook</param>
-        /// <param name="callback">The callback.</param>
-        /// <param name="hInstance">The handle you want to attach the event to, can be null</param>
-        /// <param name="threadId">The thread you want to attach the event to, can be null</param>
-        /// <returns>a handle to the desired hook</returns>
-        [DllImport("user32.dll")]
-        static extern IntPtr SetWindowsHookEx(int idHook, keyboardHookProc callback, IntPtr hInstance, uint threadId);
 
         /// <summary>
-        /// Unhooks the windows hook.
+        /// Creates snapshot of computer screen and returns its image
         /// </summary>
-        /// <param name="hInstance">The hook handle that was returned from SetWindowsHookEx</param>
-        /// <returns>True if successful, false otherwise</returns>
-        [DllImport("user32.dll")]
-        static extern bool UnhookWindowsHookEx(IntPtr hInstance);
+        /// <returns>Image of the screen</returns>
+        public Bitmap GetScreenSnapshot()
+        {
+            Bitmap bitmap = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
+            Graphics graphics = Graphics.FromImage(bitmap);
+            graphics.CopyFromScreen(0, 0, 0, 0, bitmap.Size);
+
+            return bitmap;
+        }
 
         /// <summary>
-        /// Calls the next hook.
+        /// Search for currently active window (focused) and returns name of the process of that window.
+        /// So if user is using Chrome right now, 'chrome' string will be returned.
         /// </summary>
-        /// <param name="idHook">The hook id</param>
-        /// <param name="nCode">The hook code</param>
-        /// <param name="wParam">The wparam.</param>
-        /// <param name="lParam">The lparam.</param>
-        /// <returns></returns>
-        [DllImport("user32.dll")]
-        static extern int CallNextHookEx(IntPtr idHook, int nCode, int wParam, ref keyboardHookStruct lParam);
+        /// <returns>Name of the process who is tied to currently active window</returns>
+        public string GetActiveWindowProcessName()
+        {
+            IntPtr windowHandle = GetForegroundWindow();
+            GetWindowThreadProcessId(windowHandle, out uint processId);
+            Process process = Process.GetProcessById((int)processId);
 
+            return process.ProcessName;
+        }
+    }
+
+    public static class Utils
+    {
         /// <summary>
-        /// Loads the library.
+        /// Gets all values of given enum
         /// </summary>
-        /// <param name="lpFileName">Name of the library</param>
-        /// <returns>A handle to the library</returns>
-        [DllImport("kernel32.dll")]
-        static extern IntPtr LoadLibrary(string lpFileName);
-        #endregion
+        /// <typeparam name="T">Enum whose values we want</typeparam>
+        /// <returns>Values of the enum</returns>
+        public static IEnumerable<T> GetEnumValues<T>()
+        {
+            return Enum.GetValues(typeof(T)).Cast<T>();
+        }
     }
 }

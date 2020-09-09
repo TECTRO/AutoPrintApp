@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrintApp", "PrintApp\PrintApp.csproj", "{6D3F2706-E32E-4A5D-B390-54EFAA702BB9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DirectPrint", "DirectPrint\DirectPrint.csproj", "{74E031E3-A0A6-41C9-B0FD-43035849BA59}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{6D3F2706-E32E-4A5D-B390-54EFAA702BB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6D3F2706-E32E-4A5D-B390-54EFAA702BB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6D3F2706-E32E-4A5D-B390-54EFAA702BB9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74E031E3-A0A6-41C9-B0FD-43035849BA59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74E031E3-A0A6-41C9-B0FD-43035849BA59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74E031E3-A0A6-41C9-B0FD-43035849BA59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74E031E3-A0A6-41C9-B0FD-43035849BA59}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
