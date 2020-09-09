@@ -31,8 +31,7 @@ namespace PrintApp
                     Key.LeftCtrl,
                     Key.LeftAlt
                 },
-                Execute,
-                HookHelper.HowToRegister.KeyUp);
+                Execute);
 
             SynchronizationContext context = SynchronizationContext.Current;
 

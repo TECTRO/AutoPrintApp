@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
@@ -22,8 +20,8 @@ namespace PrintApp
             None
         }
 
-        private readonly List<Key> HookedKeys = new List<Key>();
-        private readonly Queue<Key> LastKeys = new Queue<Key>();
+        private readonly List<Key> _hookedKeys = new List<Key>();
+        private readonly Queue<Key> _lastKeys = new Queue<Key>();
 
 
         public delegate void FuncDelegate();
@@ -47,15 +45,15 @@ namespace PrintApp
                     lock (_syncPlug)
                     {
                         foreach (var pressedKey in pressedKeys)
-                            LastKeys.Enqueue(pressedKey);
+                            _lastKeys.Enqueue(pressedKey);
                         
 
-                        while (LastKeys.Count > HookedKeys.Count)
-                            LastKeys.Dequeue();
+                        while (_lastKeys.Count > _hookedKeys.Count)
+                            _lastKeys.Dequeue();
 
-                        if (HookedKeys.All(f => LastKeys.Contains(f)))
+                        if (_hookedKeys.All(f => _lastKeys.Contains(f)))
                         {
-                            LastKeys.Clear();
+                            _lastKeys.Clear();
                             ExternFunc?.Invoke();
                         }
 
@@ -65,11 +63,12 @@ namespace PrintApp
                 }
                 Thread.Sleep(1);
             }
+            // ReSharper disable once FunctionNeverReturns
         }
 
-        public HookHelper(Key[] keys, FuncDelegate externFunc, HowToRegister howTo)
+        public HookHelper(Key[] keys, FuncDelegate externFunc)
         {
-            HookedKeys.AddRange(keys);
+            _hookedKeys.AddRange(keys);
             ExternFunc = externFunc;
             var th = new Thread(StartMonitor);
             th.SetApartmentState(ApartmentState.STA);
@@ -79,9 +78,6 @@ namespace PrintApp
 
     public class DataSource
     {
-        [DllImport("User32.dll")]
-        private static extern short GetAsyncKeyState(int vKey);
-
         [DllImport("user32.dll")]
         static extern IntPtr GetForegroundWindow();
 
@@ -119,33 +115,6 @@ namespace PrintApp
             }
 
             return newPressedKeys;
-        }
-
-        /// <summary>
-        /// Creates snapshot of computer screen and returns its image
-        /// </summary>
-        /// <returns>Image of the screen</returns>
-        public Bitmap GetScreenSnapshot()
-        {
-            Bitmap bitmap = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height);
-            Graphics graphics = Graphics.FromImage(bitmap);
-            graphics.CopyFromScreen(0, 0, 0, 0, bitmap.Size);
-
-            return bitmap;
-        }
-
-        /// <summary>
-        /// Search for currently active window (focused) and returns name of the process of that window.
-        /// So if user is using Chrome right now, 'chrome' string will be returned.
-        /// </summary>
-        /// <returns>Name of the process who is tied to currently active window</returns>
-        public string GetActiveWindowProcessName()
-        {
-            IntPtr windowHandle = GetForegroundWindow();
-            GetWindowThreadProcessId(windowHandle, out uint processId);
-            Process process = Process.GetProcessById((int)processId);
-
-            return process.ProcessName;
         }
     }
 

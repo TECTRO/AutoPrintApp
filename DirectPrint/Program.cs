@@ -84,7 +84,7 @@ namespace DirectPrint
 
                 printDialog1.Document.PrintPage += (s, e) => { e.Graphics.DrawImage(adaptedBitmap, e.MarginBounds); };
 
-
+                
                 DialogResult result = printDialog1.ShowDialog();
 
                 if (result == DialogResult.OK)
