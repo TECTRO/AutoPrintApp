@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Printing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -85,7 +86,9 @@ namespace DirectPrint
 
                 printDialog1.Document.PrintPage += (s, e) => { e.Graphics.DrawImage(adaptedBitmap, e.MarginBounds); };
 
-                Process.Start("ForegroundShowApp.exe");
+                if(File.Exists("ForegroundShowApp.exe"))
+                    Process.Start("ForegroundShowApp.exe");
+
                 DialogResult result = printDialog1.ShowDialog();
 
                 if (result == DialogResult.OK)

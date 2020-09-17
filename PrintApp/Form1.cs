@@ -55,5 +55,30 @@ namespace PrintApp
         {
             _hook.StopMonitor();
         }
+
+        //windowUpdater===============================================================================
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr SetForegroundWindow(IntPtr hWnd);
+
+        // For Windows Mobile, replace user32.dll with coredll.dll
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
+        private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
+        {
+          
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            IntPtr printWnd = FindWindow(null, "Печать");
+
+            if (printWnd.ToString() != "0")
+                SetForegroundWindow(printWnd);
+        }
+
+        //===========================================================================================
+
     }
 }
