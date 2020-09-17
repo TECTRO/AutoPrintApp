@@ -65,11 +65,6 @@ namespace PrintApp
         [DllImport("user32.dll", SetLastError = true)]
         static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
-        private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
-        {
-          
-        }
-
         private void timer1_Tick(object sender, EventArgs e)
         {
             IntPtr printWnd = FindWindow(null, "Печать");
