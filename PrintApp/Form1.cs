@@ -65,12 +65,37 @@ namespace PrintApp
         [DllImport("user32.dll", SetLastError = true)]
         static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
+        [DllImportAttribute("User32.DLL")]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+        private const int SW_SHOW = 5;
+        private const int SW_MINIMIZE = 6;
+        private const int SW_RESTORE = 9;
         private void timer1_Tick(object sender, EventArgs e)
         {
             IntPtr printWnd = FindWindow(null, "Печать");
 
             if (printWnd.ToString() != "0")
+            {
+                ShowWindow(printWnd, SW_RESTORE);
                 SetForegroundWindow(printWnd);
+                if(listBox1.Items.Count>0)
+                {    if ( listBox1.Items[listBox1.Items.Count - 1] as string != "Обновлено" || !(listBox1.Items[listBox1.Items.Count - 1] is string))
+                        listBox1.Items.Add("Обновлено");
+                }
+                else
+                    listBox1.Items.Add("Обновлено");
+
+            }
+            else
+            {
+                if (listBox1.Items.Count > 0)
+                { 
+                    if ( listBox1.Items[listBox1.Items.Count - 1] as string != "Ошибка обновления" || !(listBox1.Items[listBox1.Items.Count - 1] is string))
+                        listBox1.Items.Add("Ошибка обновления");
+                }
+                else
+                    listBox1.Items.Add("Ошибка обновления");
+            }
         }
 
         //===========================================================================================
