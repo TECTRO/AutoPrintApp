@@ -32,11 +32,11 @@ namespace PrintApp
 
         public AllFuncDelegate AllFunc;
 
-        public void StartMonitor()
+        public void StartMonitor(StatusHolder status)
         {
             DataSource dataSource = new DataSource();
 
-            while (true)
+            while (status.IsActive)
             {
                 // Get pressed keys and saves them
                 List<Key> pressedKeys = dataSource.GetNewPressedKeys();
@@ -66,11 +66,20 @@ namespace PrintApp
             // ReSharper disable once FunctionNeverReturns
         }
 
+        public class StatusHolder
+        {
+            public bool IsActive = true;
+        }
+        private StatusHolder _monitorStatus = new StatusHolder();
+        public void StopMonitor()
+        {
+            _monitorStatus.IsActive = false;
+        }
         public HookHelper(Key[] keys, FuncDelegate externFunc)
         {
             _hookedKeys.AddRange(keys);
             ExternFunc = externFunc;
-            var th = new Thread(StartMonitor);
+            var th = new Thread(() => { StartMonitor(_monitorStatus); });
             th.SetApartmentState(ApartmentState.STA);
             th.Start();
         }

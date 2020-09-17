@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrintApp", "PrintApp\PrintA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DirectPrint", "DirectPrint\DirectPrint.csproj", "{74E031E3-A0A6-41C9-B0FD-43035849BA59}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForegroundShowApp", "ForegroundShowApp\ForegroundShowApp.csproj", "{74593AA9-066D-4732-A02C-CB7D9BCF461A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{74E031E3-A0A6-41C9-B0FD-43035849BA59}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{74E031E3-A0A6-41C9-B0FD-43035849BA59}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{74E031E3-A0A6-41C9-B0FD-43035849BA59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{74593AA9-066D-4732-A02C-CB7D9BCF461A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74593AA9-066D-4732-A02C-CB7D9BCF461A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74593AA9-066D-4732-A02C-CB7D9BCF461A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{74593AA9-066D-4732-A02C-CB7D9BCF461A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -50,5 +50,10 @@ namespace PrintApp
         {
             Process.Start("DirectPrint.exe");
         }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            _hook.StopMonitor();
+        }
     }
 }
