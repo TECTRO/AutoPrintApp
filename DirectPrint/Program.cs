@@ -42,12 +42,17 @@ namespace DirectPrint
         {
             try
             {
-                PrintDialog printDialog1 = new PrintDialog();
-                printDialog1.Document = new PrintDocument
-                { DefaultPageSettings = { Landscape = true, Margins = new Margins(20, 20, 20, 20) } };
+                PrintDialog printDialog1 = new PrintDialog
+                {
+                    Document = new PrintDocument
+                    {
+                        DefaultPageSettings = {Landscape = true, Margins = new Margins(20, 20, 20, 20)}
+                    }
+                };
 
 
-                var defaultBounds = printDialog1.Document.DefaultPageSettings.Bounds;
+                /*
+                var defaultBounds = printDialog1.PrinterSettings.DefaultPageSettings.Bounds;
 
                 var maxSize = Math.Max(printScreen.Width, printScreen.Height);
                 double mult = 4;
@@ -83,24 +88,64 @@ namespace DirectPrint
 
                 graphics.Dispose();
                 printScreen.Dispose();
+                */
 
-                printDialog1.Document.PrintPage += (s, e) => { e.Graphics.DrawImage(adaptedBitmap, e.MarginBounds); };
+                printDialog1.Document.PrintPage += (s, e) =>
+                {
+                    var defaultBounds = e.MarginBounds;
 
-                if(File.Exists("ForegroundShowApp.exe"))
-                    Process.Start("ForegroundShowApp.exe");
+                    var maxSize = Math.Max(printScreen.Width, printScreen.Height);
+                    double mult = 4;
 
-                DialogResult result = printDialog1.ShowDialog();
+                    if (defaultBounds.Width > defaultBounds.Height)
+                        defaultBounds = new Rectangle(0, 0, (int)(maxSize * mult),
+                            (int)(Math.Round((double)defaultBounds.Height / defaultBounds.Width * maxSize) * mult));
 
-                if (result == DialogResult.OK)
+                    if (defaultBounds.Width < defaultBounds.Height)
+                        defaultBounds = new Rectangle(0, 0,
+                            (int)(Math.Round((double)defaultBounds.Width / defaultBounds.Height * maxSize) * mult),
+                            (int)(maxSize * mult));
+
+
+                    int psHeight = defaultBounds.Height;
+                    int psWidth = (int)Math.Round(((double)printScreen.Size.Width) / printScreen.Size.Height * psHeight);
+                    bool horizontalCentering = true;
+
+                    if (psWidth > defaultBounds.Width)
+                    {
+                        psWidth = defaultBounds.Width;
+                        psHeight = (int)Math.Round((double)printScreen.Size.Height / printScreen.Size.Width * psWidth);
+                        horizontalCentering = false;
+                    }
+
+                    Bitmap adaptedBitmap = new Bitmap(defaultBounds.Width, defaultBounds.Height);
+                    Graphics graphics = Graphics.FromImage(adaptedBitmap);
+
+                    graphics.DrawImage(printScreen,
+                        horizontalCentering
+                            ? new Rectangle((defaultBounds.Width - psWidth) / 2, 0, psWidth, psHeight)
+                            : new Rectangle(0, (defaultBounds.Height - psHeight) / 2, psWidth, psHeight));
+
+                    e.Graphics.DrawImage(adaptedBitmap, e.MarginBounds);
+
+                    graphics.Dispose();
+                    printScreen.Dispose();
+                    adaptedBitmap.Dispose();
+
+                    
+                };
+
+
+                if (printDialog1.ShowDialog() == DialogResult.OK)
                     printDialog1.Document.Print();
 
                 printDialog1.Document.Dispose();
-                adaptedBitmap.Dispose();
                 printDialog1.Dispose();
+                //adaptedBitmap.Dispose();
             }
-            catch
+            catch(Exception e)
             {
-                MessageBox.Show(@"Ошибка печати", @"Внимание!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Ошибка печати \n{e.Message}", @"Внимание!", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

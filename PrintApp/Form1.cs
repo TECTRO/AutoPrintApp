@@ -44,7 +44,24 @@ namespace PrintApp
                 },null);
                 
             };
+
+            Thread th = new Thread(() =>
+            {
+                while (!isFinish)
+                {
+                    IntPtr printWnd = FindWindow(null, "Печать");
+                    ShowWindow(printWnd, SW_RESTORE);
+                    SetForegroundWindow(printWnd);
+
+
+                    Thread.Sleep(1);
+                }
+            });
+            th.SetApartmentState(ApartmentState.STA);
+            th.Start();
         }
+
+        private bool isFinish;
 
         private void Execute()
         {
@@ -54,6 +71,7 @@ namespace PrintApp
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
             _hook.StopMonitor();
+            isFinish = true;
         }
 
         //windowUpdater===============================================================================
